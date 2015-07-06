@@ -2,11 +2,15 @@ import collections
 import observable
 
 
-class UnknownTransition(Exception):
+class FSMException(Exception):
     pass
 
 
-class AlreadyRegistered(Exception):
+class UnknownTransition(FSMException):
+    pass
+
+
+class AlreadyRegistered(FSMException):
     pass
 
 
@@ -48,7 +52,9 @@ class MetaMachine(type):
 
         parents = [b for b in bases if isinstance(b, MetaMachine)]
         if not parents:
-            return super_new(cls, name, bases, attrs)
+            new_class = super_new(cls, name, bases, attrs)
+            cls.add_exception_classes(new_class)
+            return new_class
 
         meta = attrs.pop('Meta', None)
 
@@ -59,18 +65,25 @@ class MetaMachine(type):
                 self.initial = getattr(meta, 'initial', None)
 
         new_class = super_new(cls, name, bases, {})
+        cls.add_exception_classes(new_class)
         setattr(new_class, '_meta', Options(meta))
 
         return new_class
+
+    def add_exception_classes(new_class):
+        setattr(new_class, 'FSMException', FSMException)
+        setattr(new_class, 'UnknownTransition', UnknownTransition)
+
 
 
 class StateMachine(object):
     __metaclass__ = MetaMachine
 
     def __init__(self, initial=None, transitions=None):
+        meta = getattr(self, '_meta', None)
         self._eventhandler = observable.Observable()
-        self._transitions = transitions or self._meta.transitions
-        self._initial = initial or self._meta.initial
+        self._transitions = transitions or getattr(meta, 'transitions', None) or []
+        self._initial = initial or getattr(meta, 'initial', None)
         self._state = None
         self._inputhandlers = collections.defaultdict(list)
         self._eventhandler.on('input', self._inputhandler)
