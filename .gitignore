@@ -1,6 +1,9 @@
 *.pyc
 *.pyo
+/.cache
+/.eggs
 /.env
+/.env3
 /*.egg-info
 /dist
 /build

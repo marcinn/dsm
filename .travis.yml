@@ -1,0 +1,12 @@
+language: python
+python:
+    - "2.7"
+    - "3.5"
+    - "3.6"
+install:
+    - pip install -r requirements.txt
+    - pip install coveralls
+script:
+    - pytest --doctest-modules --pep8 -v -cov=dsm --ignore setup.py
+after_success:
+    - coveralls
