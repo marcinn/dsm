@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='dsm',
-      version='0.3',
+      version='0.4',
       description='Damn simple finite state machine ',
       classifiers=[
         "Development Status :: 4 - Beta",

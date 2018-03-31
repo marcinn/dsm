@@ -16,8 +16,9 @@ class AlreadyRegistered(FSMException):
 
 
 class Transitions(object):
-    def __init__(self, transitions=None):
+    def __init__(self, transitions=None, fallbacks=None):
         self._states = collections.defaultdict(dict)
+        self._fallbacks = {}
 
         if transitions:
             for from_state, value, to_state in transitions:
@@ -26,6 +27,10 @@ class Transitions(object):
                 else:
                     func = self.register
                 func(from_state, value, to_state)
+
+        if fallbacks:
+            for from_state, to_state in fallbacks:
+                self.register_fallback(from_state, to_state)
 
     def register(self, from_state, value, to_state):
         if from_state in self._states and value in self._states[from_state]:
@@ -38,6 +43,40 @@ class Transitions(object):
         for value in values:
             self.register(from_state, value, to_state)
 
+    def register_fallback(self, from_state, to_state):
+        """
+        Registers fallback transition which will be used
+        when there is no registered transition for input
+
+        >>> import string
+        >>> class DigitsDetectorMachine(StateMachine):
+        ...     class Meta:
+        ...         initial = 'letter'
+        ...         transitions = (
+        ...             ('letter', list(string.digits), 'digit'),  # 0-9 -> digit  # NOQA
+        ...             ('digit', list(string.digits), 'digit'),  # 0-9 -> stay in digit  # NOQA
+        ...         )
+        ...         fallbacks = (
+        ...             ('digit', 'letter'),  # non-digit -> letter
+        ...             ('letter', 'letter'),  # non-digit -> stay in letter
+        ...         )
+
+        >>> output = []
+        >>> dd = DigitsDetectorMachine()
+        >>> dd.when('digit', output.append)
+        >>> dd.process_many('test1234test4321')
+        'digit'
+        >>> ''.join(output)
+        '12344321'
+        """
+
+        if from_state in self._fallbacks:
+            raise AlreadyRegistered(
+                'Fallback transition for `%s` '
+                'is already registered' % from_state)
+
+        self._fallbacks[from_state] = to_state
+
     def can(self, value, current_state):
         return bool(
                 self._states.get(current_state) and
@@ -47,8 +86,11 @@ class Transitions(object):
         try:
             return self._states[current_state][value]
         except KeyError:
-            raise UnknownTransition(
-                'Can not find transition for `%s` in state `%s`' % (
+            try:
+                return self._fallbacks[current_state]
+            except KeyError:
+                raise UnknownTransition(
+                    'Can not find transition for `%s` in state `%s`' % (
                                                     value, current_state))
 
 
@@ -66,8 +108,9 @@ class MetaMachine(type):
 
         class Options(object):
             def __init__(self, meta):
-                self.transitions = Transitions(transitions=getattr(
-                    meta, 'transitions', None))
+                self.transitions = Transitions(
+                        transitions=getattr(meta, 'transitions', None),
+                        fallbacks=getattr(meta, 'fallbacks', None))
                 self.initial = getattr(meta, 'initial', None)
 
         new_class = super_new(cls, name, bases, {})
