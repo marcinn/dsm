@@ -19,6 +19,10 @@ class MachineState:
         self.fsm.process_many(values)
         self.instance.__dict__[self.field.name] = self
 
+    def reset(self):
+        self.fsm.reset()
+        self.instance.__dict__[self.field.name] = self
+
     def __eq__(self, other):
         try:
             return self.fsm.state == other.fsm.state
