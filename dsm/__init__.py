@@ -21,6 +21,7 @@ class AlreadyRegistered(FSMException):
 
 class Transitions(object):
     def __init__(self, transitions=None, fallbacks=None):
+        self._allstates = set()
         self._states = collections.defaultdict(dict)
         self._fallbacks = {}
 
@@ -37,7 +38,7 @@ class Transitions(object):
                 self.register_fallback(from_state, to_state)
 
     def has_state(self, state):
-        return state in self._states
+        return state in self._allstates
 
     def register(self, from_state, value, to_state):
         if from_state in self._states and value in self._states[from_state]:
@@ -45,6 +46,7 @@ class Transitions(object):
                 'Transition for `%s` is already registered for state `%s`' % (
                     value, from_state))
         self._states[from_state][value] = to_state
+        self._allstates.update([from_state, to_state])
 
     def register_many(self, from_state, values, to_state):
         for value in values:
@@ -83,6 +85,7 @@ class Transitions(object):
                 'is already registered' % from_state)
 
         self._fallbacks[from_state] = to_state
+        self._allstates.update([from_state, to_state])
 
     def can(self, value, current_state):
         return bool(
