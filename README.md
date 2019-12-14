@@ -22,6 +22,53 @@ pip install dsm
 
 ## Usage
 
+### Django integration
+
+It is possible to integrate `dsm` with Django models by
+declaring a `StateMachineField`.
+
+```python
+
+from django.db import models
+from dsm.fields import StateMachineField
+
+
+class Order(models.Model):
+    status = StateMachineField(
+        transitions=(
+            ('new', ['confirmed'], 'processing'),
+            ('processing', ['cancel'], 'cancelled'),
+            ('processing', ['send'], 'sending'),
+            ('sending', ['deliver'], 'finished'),
+        ),
+        max_length=16,
+        choices=(
+            ('new', _('New')),
+            ('processing', _('Processing')),
+            ('sending', _('Sending')),
+            ('finished', _('Finished')),
+            ('canceled', _('Cancelled')),
+        ),
+        db_index=True,
+        default='new'
+    )
+```
+
+Now you can create an `Order` and check it's status:
+
+```python
+>>> order = Order.objects.create()
+>>> order.status
+new
+>>> type(order.status)
+dsm.fields.MachineState
+```
+
+The string representation of `status` field is same as state name
+provided in transitions declaration, but internally there is always
+`dsm.fields.MachineState` instance.
+
+
 ### Declarative
 
 
@@ -123,6 +170,21 @@ Events example (class based):
 >>> s = Sumator()
 >>> s.summarize('666')
 18
+```
+### Imperative
+
+```python
+import string
+import dsm
+
+fsm = dsm.StateMachine(
+        initial='init',
+        transitions=dsm.Transitions((
+                ('init', list(string.digits), 'digit_enter'),
+                ('digit_enter', list(string.digits), 'digit_enter'),
+                ('digit_enter', '=', 'summarize'),
+            ))
+        )
 ```
 
 ## License

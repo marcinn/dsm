@@ -7,6 +7,10 @@ class FSMException(Exception):
     pass
 
 
+class StateNotDefined(FSMException):
+    pass
+
+
 class UnknownTransition(FSMException):
     pass
 
@@ -31,6 +35,9 @@ class Transitions(object):
         if fallbacks:
             for from_state, to_state in fallbacks:
                 self.register_fallback(from_state, to_state)
+
+    def has_state(self, state):
+        return state in self._states
 
     def register(self, from_state, value, to_state):
         if from_state in self._states and value in self._states[from_state]:
@@ -193,6 +200,9 @@ class StateMachine(six.with_metaclass(MetaMachine, object)):
         return self._transitions.can(value, self.state)
 
     def reset(self):
+        if not self._transitions.has_state(self._initial):
+            raise StateNotDefined(self._initial)
+
         old_state = self._state
         self._state = self._initial
         self._eventhandler.trigger(
