@@ -7,6 +7,10 @@ class FSMException(Exception):
     pass
 
 
+class StateNotDefined(FSMException):
+    pass
+
+
 class UnknownTransition(FSMException):
     pass
 
@@ -17,6 +21,7 @@ class AlreadyRegistered(FSMException):
 
 class Transitions(object):
     def __init__(self, transitions=None, fallbacks=None):
+        self._allstates = set()
         self._states = collections.defaultdict(dict)
         self._fallbacks = {}
 
@@ -32,12 +37,16 @@ class Transitions(object):
             for from_state, to_state in fallbacks:
                 self.register_fallback(from_state, to_state)
 
+    def has_state(self, state):
+        return state in self._allstates
+
     def register(self, from_state, value, to_state):
         if from_state in self._states and value in self._states[from_state]:
             raise AlreadyRegistered(
                 'Transition for `%s` is already registered for state `%s`' % (
                     value, from_state))
         self._states[from_state][value] = to_state
+        self._allstates.update([from_state, to_state])
 
     def register_many(self, from_state, values, to_state):
         for value in values:
@@ -76,6 +85,7 @@ class Transitions(object):
                 'is already registered' % from_state)
 
         self._fallbacks[from_state] = to_state
+        self._allstates.update([from_state, to_state])
 
     def can(self, value, current_state):
         return bool(
@@ -193,6 +203,9 @@ class StateMachine(six.with_metaclass(MetaMachine, object)):
         return self._transitions.can(value, self.state)
 
     def reset(self):
+        if not self._transitions.has_state(self._initial):
+            raise StateNotDefined(self._initial)
+
         old_state = self._state
         self._state = self._initial
         self._eventhandler.trigger(
