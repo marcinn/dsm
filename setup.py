@@ -10,12 +10,17 @@ with open(
 
 
 setup(name='dsm',
-      version='0.5-dev1',
+      version='0.5',
       description='Damn simple finite state machine ',
       classifiers=[
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
+        "Framework :: Django",
+        "Framework :: Django :: 3.0",
+        "Framework :: Django :: 2.2",
+        "Framework :: Django :: 2.1",
+        "Framework :: Django :: 2.0",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
