@@ -88,4 +88,8 @@ class StateMachineFieldMixin:
 
 
 class StateMachineField(StateMachineFieldMixin, models.CharField):
-    pass
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        path = 'dsm.fields.StateMachineField'
+        args.insert(0, self.transitions)
+        return name, path, args, kwargs
