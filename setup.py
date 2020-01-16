@@ -10,7 +10,7 @@ with open(
 
 
 setup(name='dsm',
-      version='0.5.1',
+      version='0.5.2',
       description='Damn simple finite state machine ',
       classifiers=[
         "Development Status :: 4 - Beta",
