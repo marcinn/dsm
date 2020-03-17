@@ -30,10 +30,10 @@ class MachineState:
             return self.fsm.state == other
 
     def __repr__(self):
-        return self.fsm.state
+        return repr(self.fsm.state)
 
     def __str__(self):
-        return self.fsm.state
+        return str(self.fsm.state)
 
     def __hash__(self):
         return hash(self.fsm.state)
