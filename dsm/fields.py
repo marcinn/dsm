@@ -86,6 +86,10 @@ class StateMachineFieldMixin:
             return value
         return str(value)
 
+    def contribute_to_class(self, cls, name, **kwargs):
+        super().contribute_to_class(cls, name, **kwargs)
+        setattr(cls, self.name, self.descriptor_class(self))
+
 
 class StateMachineField(StateMachineFieldMixin, models.CharField):
     def deconstruct(self):
