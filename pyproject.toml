@@ -7,7 +7,7 @@ name = "dsm"
 version = "0.5.3"
 description = "Damn simple finite state machine"
 readme = "README.md"
-requires-python = ">=3.5"
+requires-python = ">=3.5, <3.14"
 keywords = ["fsm", "state machine"]
 authors = [
   { name="Marcin Nowak", email="marcin.j.nowak@gmail.com" },
@@ -20,15 +20,28 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Framework :: Django",
-    "Framework :: Django :: 3.0",
-    "Framework :: Django :: 2.2",
-    "Framework :: Django :: 2.1",
     "Framework :: Django :: 2.0",
+    "Framework :: Django :: 2.1",
+    "Framework :: Django :: 2.2",
+    "Framework :: Django :: 3.0",
+    "Framework :: Django :: 3.1",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Intended Audience :: Developers",
 ]
