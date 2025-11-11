@@ -7,7 +7,7 @@ name = "dsm"
 version = "0.5.3"
 description = "Damn simple finite state machine"
 readme = "README.md"
-requires-python = ">=3.5, <3.14"
+requires-python = ">=3.8, <3.14"
 keywords = ["fsm", "state machine"]
 authors = [
   { name="Marcin Nowak", email="marcin.j.nowak@gmail.com" },
@@ -33,9 +33,6 @@ classifiers = [
     "Framework :: Django :: 5.1",
     "Framework :: Django :: 5.2",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.5",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
