@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dsm"
+version = "0.5.3"
+description = "Damn simple finite state machine"
+readme = "README.md"
+requires-python = ">=3.5"
+keywords = ["fsm", "state machine"]
+authors = [
+  { name="Marcin Nowak", email="marcin.j.nowak@gmail.com" },
+]
+maintainers = [
+  { name="Marcin Nowak", email="marcin.j.nowak@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Framework :: Django",
+    "Framework :: Django :: 3.0",
+    "Framework :: Django :: 2.2",
+    "Framework :: Django :: 2.1",
+    "Framework :: Django :: 2.0",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Developers",
+]
+dependencies = [
+    "observable",
+    "six",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/marcinn/dsm"
+"Bug Tracker" = "https://github.com/marcinn/dsm/issues"
+
+[tool.setuptools.packages]
+find = {namespaces = false}

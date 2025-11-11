@@ -19,7 +19,7 @@ class AlreadyRegistered(FSMException):
     pass
 
 
-class Transitions(object):
+class Transitions:
     def __init__(self, transitions=None, fallbacks=None):
         self._allstates = set()
         self._states = collections.defaultdict(dict)
@@ -116,7 +116,7 @@ class MetaMachine(type):
 
         meta = attrs.pop('Meta', None)
 
-        class Options(object):
+        class Options:
             def __init__(self, meta):
                 self.transitions = Transitions(
                         transitions=getattr(meta, 'transitions', None),
