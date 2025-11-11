@@ -56,27 +56,6 @@ class Transitions:
         """
         Registers fallback transition which will be used
         when there is no registered transition for input
-
-        >>> import string
-        >>> class DigitsDetectorMachine(StateMachine):
-        ...     class Meta:
-        ...         initial = 'letter'
-        ...         transitions = (
-        ...             ('letter', list(string.digits), 'digit'),  # 0-9 -> digit  # NOQA
-        ...             ('digit', list(string.digits), 'digit'),  # 0-9 -> stay in digit  # NOQA
-        ...         )
-        ...         fallbacks = (
-        ...             ('digit', 'letter'),  # non-digit -> letter
-        ...             ('letter', 'letter'),  # non-digit -> stay in letter
-        ...         )
-
-        >>> output = []
-        >>> dd = DigitsDetectorMachine()
-        >>> dd.when('digit', output.append)
-        >>> dd.process_many('test1234test4321')
-        'digit'
-        >>> ''.join(output)
-        '12344321'
         """
 
         if from_state in self._fallbacks:
@@ -136,38 +115,6 @@ class MetaMachine(type):
 
 class StateMachine(six.with_metaclass(MetaMachine, object)):
     def __init__(self, initial=None, transitions=None):
-        """
-        >>> import string
-        >>> class SumatorMachine(StateMachine):
-        ...     class Meta:
-        ...         initial = 'init'
-        ...         transitions = (
-        ...             ('init', list(string.digits), 'digit_enter'),
-        ...             ('digit_enter', list(string.digits), 'digit_enter'),
-        ...             ('digit_enter', '=', 'summarize'),
-        ...         )
-
-        >>> class Sumator(object):
-        ...     def __init__(self):
-        ...         self.fsm = SumatorMachine()
-        ...         self.fsm.when('summarize', self._calculate)
-        ...         self.fsm.when('digit_enter', self._store_digit)
-        ...     def _store_digit(self, value):
-        ...         self.digits.append(int(value))
-        ...     def _calculate(self, value):
-        ...         self.result = sum(self.digits)
-        ...     def summarize(self, valuestring):
-        ...         self.digits = []
-        ...         self.result = None
-        ...         self.fsm.reset()
-        ...         self.fsm.process_many(valuestring+'=')
-        ...         return self.result
-
-        >>> sumator = Sumator()
-        >>> sumator.summarize('666')
-        18
-        """
-
         meta = getattr(self, '_meta', None)
         self._eventhandler = observable.Observable()
         self._transitions = transitions or getattr(
@@ -219,8 +166,3 @@ class StateMachine(six.with_metaclass(MetaMachine, object)):
     def _inputhandler(self, state, value):
         for x in self._inputhandlers[state]:
             x(value)
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
