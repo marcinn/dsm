@@ -2,3 +2,4 @@ twine
 ipython
 ipdb
 wheel
+pytest

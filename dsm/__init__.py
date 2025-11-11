@@ -118,7 +118,7 @@ class StateMachine(six.with_metaclass(MetaMachine, object)):
         meta = getattr(self, '_meta', None)
         self._eventhandler = observable.Observable()
         self._transitions = transitions or getattr(
-                                meta, 'transitions', None) or []
+                                meta, 'transitions', None) or Transitions()
         self._initial = initial or getattr(meta, 'initial', None)
         self._state = None
         self._inputhandlers = collections.defaultdict(list)
