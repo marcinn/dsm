@@ -37,27 +37,29 @@ declaring a `StateMachineField`.
 ```python
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from dsm.fields import StateMachineField
 
 
 class Order(models.Model):
+    class Status(models.TextChoices):
+        NEW = 'new', _('New')
+        PROCESSING = 'processing', _('Processing')
+        SENDING = 'sending', _('Sending')
+        FINISHED = 'finished', _('Finished')
+        CANCELLED = 'cancelled', _('Cancelled')
+
     status = StateMachineField(
         transitions=(
-            ('new', ['confirm'], 'processing'),
-            ('processing', ['cancel'], 'cancelled'),
-            ('processing', ['send'], 'sending'),
-            ('sending', ['deliver'], 'finished'),
+            (Status.NEW, ['confirm'], Status.PROCESSING),
+            (Status.PROCESSING, ['cancel'], Status.CANCELLED),
+            (Status.PROCESSING, ['send'], Status.SENDING),
+            (Status.SENDING, ['deliver'], Status.FINISHED),
         ),
+        choices=Status.choices,
         max_length=16,
-        choices=(
-            ('new', _('New')),
-            ('processing', _('Processing')),
-            ('sending', _('Sending')),
-            ('finished', _('Finished')),
-            ('canceled', _('Cancelled')),
-        ),
         db_index=True,
-        default='new'
+        default=Status.NEW,
     )
 ```
 

@@ -44,7 +44,6 @@ classifiers = [
 ]
 dependencies = [
     "observable",
-    "six",
 ]
 
 [project.urls]

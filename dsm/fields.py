@@ -1,6 +1,6 @@
 from django.db import models
-from . import StateMachine, Transitions
 
+from . import StateMachine, Transitions
 
 __all__ = ['StateMachineField']
 

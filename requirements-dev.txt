@@ -3,3 +3,4 @@ ipython
 ipdb
 wheel
 pytest
+pytest-django
