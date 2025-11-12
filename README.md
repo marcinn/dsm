@@ -1,7 +1,15 @@
 # dsm
 Damn simple finite state machine
 
-[![Build Status](https://travis-ci.org/marcinn/dsm.svg?branch=master)](https://travis-ci.org/marcinn/dsm)
+![PyPI - Version](https://img.shields.io/pypi/v/dsm)
+![PyPI - Status](https://img.shields.io/pypi/status/dsm)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dsm)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/dsm)
+![PyPI - Format](https://img.shields.io/pypi/format/dsm)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/marcinn/dsm/.github%2Fworkflows%2Fci.yml)
+![PyPI - License](https://img.shields.io/pypi/l/dsm)
+![PyPI - Implementation](https://img.shields.io/pypi/implementation/dsm)
+
 
 ## About
 
@@ -11,9 +19,8 @@ Inputs and state changes are emitting observable events.
 
 ## Requirements
 
-  - Python 2.7, 3.5, 3.6
+  - Python 3.8+
   - ``observable``
-  - ``six`` for compatibility between Python 2 and Python 3
 
 ## Installation
 
@@ -36,7 +43,7 @@ from dsm.fields import StateMachineField
 class Order(models.Model):
     status = StateMachineField(
         transitions=(
-            ('new', ['confirmed'], 'processing'),
+            ('new', ['confirm'], 'processing'),
             ('processing', ['cancel'], 'cancelled'),
             ('processing', ['send'], 'sending'),
             ('sending', ['deliver'], 'finished'),
