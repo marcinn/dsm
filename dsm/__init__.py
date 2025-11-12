@@ -1,4 +1,4 @@
-import six
+
 import collections
 import observable
 
@@ -113,7 +113,7 @@ class MetaMachine(type):
         setattr(new_class, 'UnknownTransition', UnknownTransition)
 
 
-class StateMachine(six.with_metaclass(MetaMachine, object)):
+class StateMachine(metaclass=MetaMachine):
     def __init__(self, initial=None, transitions=None):
         meta = getattr(self, '_meta', None)
         self._eventhandler = observable.Observable()
