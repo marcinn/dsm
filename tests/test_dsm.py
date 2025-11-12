@@ -7,6 +7,7 @@ from dsm import (
     AlreadyRegistered,
     StateNotDefined,
     EmptyMachine,
+    AmbiguousTransition,
 )
 
 
@@ -226,3 +227,72 @@ class TestStateMachine(unittest.TestCase):
 
         with self.assertRaises(EmptyMachine):
             EmptyFSM()
+
+
+class TestNewFeatures(unittest.TestCase):
+    def setUp(self):
+        self.transitions = Transitions(
+            transitions=[
+                ("start", "go_to_middle_1", "middle"),
+                ("start", "go_to_middle_2", "middle"),
+                ("start", "go_to_end", "end"),
+                ("middle", "finish", "end"),
+            ]
+        )
+
+    def test_transitions_get_values_for_destination_single_path(self):
+        values = self.transitions.get_values_for_destination("start", "end")
+        self.assertEqual(values, ("go_to_end",))
+
+    def test_transitions_get_values_for_destination_multiple_paths(self):
+        values = self.transitions.get_values_for_destination("start", "middle")
+        self.assertIn("go_to_middle_1", values)
+        self.assertIn("go_to_middle_2", values)
+        self.assertEqual(len(values), 2)
+
+    def test_transitions_get_values_for_destination_no_path(self):
+        values = self.transitions.get_values_for_destination("start", "non_existent")
+        self.assertEqual(values, ())
+
+    def test_transitions_get_values_for_destination_non_existent_current_state(self):
+        values = self.transitions.get_values_for_destination("non_existent", "end")
+        self.assertEqual(values, ())
+
+    def test_state_machine_transition_to_state_success(self):
+        class MyMachine(StateMachine):
+            class Meta:
+                initial = "start"
+                transitions = (
+                    ("start", "go_to_middle", "middle"),
+                    ("middle", "finish", "end"),
+                )
+
+        sm = MyMachine()
+        self.assertEqual("start", sm.state)
+        sm.transition_to("middle")
+        self.assertEqual("middle", sm.state)
+        sm.transition_to("end")
+        self.assertEqual("end", sm.state)
+
+    def test_state_machine_transition_to_state_unknown_transition(self):
+        class MyMachine(StateMachine):
+            class Meta:
+                initial = "start"
+                transitions = (("start", "go_to_end", "end"),)
+
+        sm = MyMachine()
+        with self.assertRaises(UnknownTransition):
+            sm.transition_to("middle")
+
+    def test_state_machine_transition_to_state_ambiguous_transition(self):
+        class MyMachine(StateMachine):
+            class Meta:
+                initial = "start"
+                transitions = (
+                    ("start", "go_to_middle_1", "middle"),
+                    ("start", "go_to_middle_2", "middle"),
+                )
+
+        sm = MyMachine()
+        with self.assertRaises(AmbiguousTransition):
+            sm.transition_to("middle")

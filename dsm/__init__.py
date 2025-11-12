@@ -23,6 +23,10 @@ class AlreadyRegistered(FSMException):
     pass
 
 
+class AmbiguousTransition(FSMException):
+    pass
+
+
 class Transitions:
     def __init__(self, transitions=None, fallbacks=None):
         self._allstates = set()
@@ -100,6 +104,17 @@ class Transitions:
                     % (value, current_state)
                 )
 
+    def get_values_for_destination(self, current_state, destination_state):
+        """
+        Returns a tuple of values that can transition from the current_state
+        to the specified destination_state.
+        """
+        possible_values = []
+        for value, to_state in self._states.get(current_state, {}).items():
+            if to_state == destination_state:
+                possible_values.append(value)
+        return tuple(possible_values)
+
 
 class MetaMachine(type):
     def __new__(cls, name, bases, attrs):
@@ -130,6 +145,7 @@ class MetaMachine(type):
     def add_exception_classes(new_class):
         setattr(new_class, "FSMException", FSMException)
         setattr(new_class, "UnknownTransition", UnknownTransition)
+        setattr(new_class, "AmbiguousTransition", AmbiguousTransition)
 
 
 class StateMachine(metaclass=MetaMachine):
@@ -178,6 +194,30 @@ class StateMachine(metaclass=MetaMachine):
 
     def acceptables(self):
         return self._transitions.acceptables(self.state)
+
+    def transition_to(self, destination_state):
+        """
+        Transitions the state machine to the destination_state if there is
+        exactly one possible transition value from the current state.
+        Raises UnknownTransition if no path exists, or AmbiguousTransition
+        if multiple paths exist.
+        """
+        possible_values = self._transitions.get_values_for_destination(
+            self.state, destination_state
+        )
+
+        if not possible_values:
+            raise UnknownTransition(
+                "No transition found from state '%s' to '%s'"
+                % (self.state, destination_state)
+            )
+        elif len(possible_values) > 1:
+            raise AmbiguousTransition(
+                "Multiple transitions found from state '%s' to '%s': %s"
+                % (self.state, destination_state, ", ".join(possible_values))
+            )
+        else:
+            return self.process(possible_values[0])
 
     def reset(self):
         if not self._transitions.has_state(self._initial):
