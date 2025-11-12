@@ -65,7 +65,7 @@ class StateMachineFieldTest(TestCase):
         field = Order._meta.get_field("status")
         self.assertEqual(field.choices, Order.Status.choices)
 
-    def test_choices_validator(self):
+    def test_choices_validator_for_unsupported_transition(self):
         field = StateMachineField(
             transitions=(("a", "op", "b"),),
             choices=(("a", "a"),),
@@ -77,6 +77,20 @@ class StateMachineFieldTest(TestCase):
         self.assertIsInstance(errors[0], Error)
         self.assertEqual(errors[0].id, "dsm.E001")
         self.assertIn("b", errors[0].msg)
+
+    def test_choices_validator_for_unsupported_default(self):
+        field = StateMachineField(
+            transitions=(("a", "op", "b"),),
+            choices=(("a", "a"), ("b", "b")),
+            default="c",
+            max_length=10,
+        )
+        field.name = "status"
+        errors = field.check()
+        self.assertEqual(len(errors), 1)
+        self.assertIsInstance(errors[0], Error)
+        self.assertEqual(errors[0].id, "dsm.E002")
+        self.assertIn("\"c\"", errors[0].msg)
 
 
 class StateMachineFieldChoiceTest(TestCase):
@@ -112,4 +126,16 @@ class StateMachineFieldChoiceTest(TestCase):
                     "Finished",
                 ]
             ),
+        )
+
+    def test_add_default_to_choices(self):
+        field = StateMachineField(
+            transitions=(("a", "op", "b"),),
+            default="c",
+            max_length=10,
+        )
+        field.name = "status"
+        self.assertEqual(
+            sorted(list(zip(*field.choices))[0]),
+            sorted(["a", "b", "c"])
         )
