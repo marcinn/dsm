@@ -4,3 +4,5 @@ ipdb
 wheel
 pytest
 pytest-django
+isort
+black

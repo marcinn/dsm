@@ -1,4 +1,3 @@
-
 import collections
 import observable
 
@@ -43,8 +42,9 @@ class Transitions:
     def register(self, from_state, value, to_state):
         if from_state in self._states and value in self._states[from_state]:
             raise AlreadyRegistered(
-                'Transition for `%s` is already registered for state `%s`' % (
-                    value, from_state))
+                "Transition for `%s` is already registered for state `%s`"
+                % (value, from_state)
+            )
         self._states[from_state][value] = to_state
         self._allstates.update([from_state, to_state])
 
@@ -60,16 +60,16 @@ class Transitions:
 
         if from_state in self._fallbacks:
             raise AlreadyRegistered(
-                'Fallback transition for `%s` '
-                'is already registered' % from_state)
+                "Fallback transition for `%s` " "is already registered" % from_state
+            )
 
         self._fallbacks[from_state] = to_state
         self._allstates.update([from_state, to_state])
 
     def can(self, value, current_state):
         return bool(
-                self._states.get(current_state) and
-                self._states[current_state].get(value))
+            self._states.get(current_state) and self._states[current_state].get(value)
+        )
 
     def execute(self, value, current_state):
         try:
@@ -79,8 +79,9 @@ class Transitions:
                 return self._fallbacks[current_state]
             except KeyError:
                 raise UnknownTransition(
-                    'Can not find transition for `%s` in state `%s`' % (
-                                                    value, current_state))
+                    "Can not find transition for `%s` in state `%s`"
+                    % (value, current_state)
+                )
 
 
 class MetaMachine(type):
@@ -93,36 +94,38 @@ class MetaMachine(type):
             cls.add_exception_classes(new_class)
             return new_class
 
-        meta = attrs.pop('Meta', None)
+        meta = attrs.pop("Meta", None)
 
         class Options:
             def __init__(self, meta):
                 self.transitions = Transitions(
-                        transitions=getattr(meta, 'transitions', None),
-                        fallbacks=getattr(meta, 'fallbacks', None))
-                self.initial = getattr(meta, 'initial', None)
+                    transitions=getattr(meta, "transitions", None),
+                    fallbacks=getattr(meta, "fallbacks", None),
+                )
+                self.initial = getattr(meta, "initial", None)
 
         new_class = super_new(cls, name, bases, {})
         cls.add_exception_classes(new_class)
-        setattr(new_class, '_meta', Options(meta))
+        setattr(new_class, "_meta", Options(meta))
 
         return new_class
 
     def add_exception_classes(new_class):
-        setattr(new_class, 'FSMException', FSMException)
-        setattr(new_class, 'UnknownTransition', UnknownTransition)
+        setattr(new_class, "FSMException", FSMException)
+        setattr(new_class, "UnknownTransition", UnknownTransition)
 
 
 class StateMachine(metaclass=MetaMachine):
     def __init__(self, initial=None, transitions=None):
-        meta = getattr(self, '_meta', None)
+        meta = getattr(self, "_meta", None)
         self._eventhandler = observable.Observable()
-        self._transitions = transitions or getattr(
-                                meta, 'transitions', None) or Transitions()
-        self._initial = initial or getattr(meta, 'initial', None)
+        self._transitions = (
+            transitions or getattr(meta, "transitions", None) or Transitions()
+        )
+        self._initial = initial or getattr(meta, "initial", None)
         self._state = None
         self._inputhandlers = collections.defaultdict(list)
-        self._eventhandler.on('input', self._inputhandler)
+        self._eventhandler.on("input", self._inputhandler)
         self.reset()
 
     @property
@@ -133,11 +136,10 @@ class StateMachine(metaclass=MetaMachine):
         new_state = self._transitions.execute(value, self.state)
 
         if not self.state == new_state:
-            self._eventhandler.trigger(
-                    'change', state=new_state, previous=self.state)
+            self._eventhandler.trigger("change", state=new_state, previous=self.state)
 
         self._state = new_state
-        self._eventhandler.trigger('input', state=new_state, value=value)
+        self._eventhandler.trigger("input", state=new_state, value=value)
 
         return self.state
 
@@ -155,9 +157,8 @@ class StateMachine(metaclass=MetaMachine):
 
         old_state = self._state
         self._state = self._initial
-        self._eventhandler.trigger(
-                'change', state=self._state, previous=old_state)
-        self._eventhandler.trigger('reset')
+        self._eventhandler.trigger("change", state=self._state, previous=old_state)
+        self._eventhandler.trigger("reset")
         return self.state
 
     def when(self, state, func):

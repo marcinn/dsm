@@ -1,8 +1,9 @@
+from django.core.checks import Error
 from django.db import models
 
 from . import StateMachine, Transitions
 
-__all__ = ['StateMachineField']
+__all__ = ["StateMachineField"]
 
 
 class MachineState:
@@ -49,13 +50,11 @@ class StateDescriptor:
             return value
         if isinstance(value, MachineState):
             return value
-        return MachineState(
-            instance, self.field, self.field._create_fsm(value))
+        return MachineState(instance, self.field, self.field._create_fsm(value))
 
     def __set__(self, instance, value):
         if value is not None:
-            value = MachineState(
-                instance, self.field, self.field._create_fsm(value))
+            value = MachineState(instance, self.field, self.field._create_fsm(value))
         instance.__dict__[self.field.name] = value
         """
         current_value = instance.__dict__.get(self.field.name)
@@ -74,12 +73,18 @@ class StateMachineFieldMixin:
     descriptor_class = StateDescriptor
 
     def __init__(self, transitions, *args, **kwargs):
-        self.transitions = transitions
+        if isinstance(transitions, Transitions):
+            self.transitions = transitions
+        else:
+            self.transitions = Transitions(transitions)
+
+        if "choices" not in kwargs:
+            kwargs["choices"] = [(s, s) for s in self.transitions._allstates]
+
         super().__init__(*args, **kwargs)
 
     def _create_fsm(self, initial):
-        return StateMachine(
-            initial=initial, transitions=Transitions(self.transitions))
+        return StateMachine(initial=initial, transitions=self.transitions)
 
     def get_prep_value(self, value):
         if value is None:
@@ -92,8 +97,22 @@ class StateMachineFieldMixin:
 
 
 class StateMachineField(StateMachineFieldMixin, models.CharField):
+    def _check_choices(self, **kwargs):
+        all_states = self.transitions._allstates
+        choice_states = {x[0] for x in self.choices}
+        if not all_states.issubset(choice_states):
+            return [
+                Error(
+                    "Following states are not defined in choices: %s"
+                    % (", ".join(all_states - choice_states)),
+                    obj=self,
+                    id="dsm.E001",
+                )
+            ]
+        return []
+
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
-        path = 'dsm.fields.StateMachineField'
+        path = "dsm.fields.StateMachineField"
         args.insert(0, self.transitions)
         return name, path, args, kwargs
