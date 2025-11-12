@@ -22,7 +22,8 @@ if not settings.configured:
 
     django.setup()
 
-from dsm.fields import StateMachineField
+from dsm import UnknownTransition
+from dsm.fields import MachineState, StateMachineField
 
 from tests.models import Order, OrderNoChoices
 
@@ -91,6 +92,46 @@ class StateMachineFieldTest(TestCase):
         self.assertIsInstance(errors[0], Error)
         self.assertEqual(errors[0].id, "dsm.E002")
         self.assertIn("\"c\"", errors[0].msg)
+
+    def test_state_descriptor_behavior(self):
+        # Test initial assignment and retrieval
+        order = Order.objects.create()
+        self.assertEqual(order.status, Order.Status.NEW)
+        self.assertIsInstance(order.status, MachineState)
+        self.assertEqual(order.status.fsm.state, Order.Status.NEW)
+
+        # Test transitioning state
+        order.status = Order.Status.PROCESSING
+        self.assertEqual(order.status, Order.Status.PROCESSING)
+        self.assertEqual(order.status.fsm.state, Order.Status.PROCESSING)
+
+        # Test assigning the same state (should not cause an error or unnecessary transition)
+        order.status = Order.Status.PROCESSING
+        self.assertEqual(order.status, Order.Status.PROCESSING)
+        self.assertEqual(order.status.fsm.state, Order.Status.PROCESSING)
+
+        # Test assigning None
+        order.status = None
+        self.assertIsNone(order.status)
+
+        # Re-assign a state after None
+        order.status = Order.Status.NEW
+        self.assertEqual(order.status, Order.Status.NEW)
+        self.assertIsInstance(order.status, MachineState)
+        self.assertEqual(order.status.fsm.state, Order.Status.NEW)
+
+        # Test saving and loading from DB
+        order.status = Order.Status.PROCESSING # Transition from NEW to PROCESSING
+        order.status = Order.Status.SENDING    # Transition from PROCESSING to SENDING
+        order.save()
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.SENDING)
+        self.assertIsInstance(order.status, MachineState)
+        self.assertEqual(order.status.fsm.state, Order.Status.SENDING)
+
+        # Test invalid transition (should raise an exception)
+        with self.assertRaises(UnknownTransition):
+            order.status = Order.Status.CANCELLED # Cannot transition from SENDING to CANCELLED directly
 
 
 class StateMachineFieldChoiceTest(TestCase):

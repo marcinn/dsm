@@ -53,20 +53,23 @@ class StateDescriptor:
         return MachineState(instance, self.field, self.field._create_fsm(value))
 
     def __set__(self, instance, value):
-        if value is not None:
-            value = MachineState(instance, self.field, self.field._create_fsm(value))
-        instance.__dict__[self.field.name] = value
-        """
         current_value = instance.__dict__.get(self.field.name)
-        if value is not None:
-            if current_value:
-                fsm = self.field._create_fsm(current_value)
-                fsm.process(value)
-            else:
-                fsm = self.field._create_fsm(value)
-            value = fsm.state
-        instance.__dict__[self.field.name] = value
-        """
+
+        if value is None:
+            instance.__dict__[self.field.name] = None
+            return
+
+        if isinstance(current_value, MachineState):
+            # If the current value is already a MachineState, attempt to transition
+            if current_value.fsm.state != value:
+                current_value.fsm.transition_to(value)
+            # Assign the existing MachineState instance back, as its internal FSM has been updated
+            instance.__dict__[self.field.name] = current_value
+        else:
+            # If it's not a MachineState (first assignment or raw value), create a new one
+            instance.__dict__[self.field.name] = MachineState(
+                instance, self.field, self.field._create_fsm(value)
+            )
 
 
 class StateMachineFieldMixin:

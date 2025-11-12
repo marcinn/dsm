@@ -52,3 +52,15 @@ class DjangoExampleTest(TestCase):
         self.assertEqual(order_to_cancel.status, "processing")
         order_to_cancel.status.process("cancel")
         self.assertEqual(order_to_cancel.status, "cancelled")
+
+    def test_save_after_indirect_transition_to(self):
+        order = Order.objects.create()
+        self.assertEqual(order.status, Order.Status.NEW)
+
+        # Indirect transition_to via direct assignment
+        order.status = Order.Status.PROCESSING
+        order.save()
+
+        # Retrieve the order from the database and check its status
+        retrieved_order = Order.objects.get(pk=order.pk)
+        self.assertEqual(retrieved_order.status, Order.Status.PROCESSING)
