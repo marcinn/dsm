@@ -6,6 +6,7 @@ from dsm import (
     UnknownTransition,
     AlreadyRegistered,
     StateNotDefined,
+    EmptyMachine,
 )
 
 
@@ -62,6 +63,29 @@ class TestTransitions(unittest.TestCase):
         t = Transitions(fallbacks=fallbacks)
         self.assertEqual("b", t.execute("anything", "a"))
 
+    def test_transitions_acceptables(self):
+        t = Transitions()
+        t.register("a", "1", "b")
+        t.register("a", "2", "c")
+        self.assertIn("1", t.acceptables("a"))
+        self.assertIn("2", t.acceptables("a"))
+        self.assertEqual(2, len(t.acceptables("a")))
+
+    def test_transitions_is_state_final(self):
+        t = Transitions()
+        t.register("a", "1", "b")
+        self.assertFalse(t.is_state_final("a"))
+        self.assertTrue(t.is_state_final("b"))
+
+    def test_transitions_get_first_state(self):
+        t = Transitions()
+        t.register("a", "1", "b")
+        t.register("b", "2", "c")
+        self.assertEqual("a", t.get_first_state())
+
+        t_empty = Transitions()
+        with self.assertRaises(EmptyMachine):
+            t_empty.get_first_state()
 
 class DigitsDetectorMachine(StateMachine):
     class Meta:
@@ -161,3 +185,44 @@ class TestStateMachine(unittest.TestCase):
 
         self.assertEqual({"state": "b", "previous": "a"}, change_event_args)
         self.assertEqual({"state": "b", "value": "1"}, input_event_args)
+
+    def test_state_machine_initial_state_from_get_first_state(self):
+        class MyMachine(StateMachine):
+            class Meta:
+                transitions = (("start", "go", "end"),)
+
+        sm = MyMachine()
+        self.assertEqual("start", sm.state)
+
+    def test_state_machine_is_final_property(self):
+        class MyMachine(StateMachine):
+            class Meta:
+                initial = "start"
+                transitions = (("start", "go", "end"),)
+
+        sm = MyMachine()
+        self.assertFalse(sm.is_final)
+        sm.process("go")
+        self.assertTrue(sm.is_final)
+
+    def test_state_machine_acceptables_method(self):
+        class MyMachine(StateMachine):
+            class Meta:
+                initial = "start"
+                transitions = (
+                    ("start", "go1", "middle"),
+                    ("start", "go2", "end"),
+                )
+
+        sm = MyMachine()
+        self.assertIn("go1", sm.acceptables())
+        self.assertIn("go2", sm.acceptables())
+        self.assertEqual(2, len(sm.acceptables()))
+
+    def test_state_machine_empty_machine_initialization(self):
+        class EmptyFSM(StateMachine):
+            class Meta:
+                transitions = ()
+
+        with self.assertRaises(EmptyMachine):
+            EmptyFSM()

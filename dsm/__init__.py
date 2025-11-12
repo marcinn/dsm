@@ -1,8 +1,13 @@
 import collections
+
 import observable
 
 
 class FSMException(Exception):
+    pass
+
+
+class EmptyMachine(FSMException):
     pass
 
 
@@ -71,6 +76,18 @@ class Transitions:
             self._states.get(current_state) and self._states[current_state].get(value)
         )
 
+    def acceptables(self, current_state):
+        return tuple(self._states[current_state])
+
+    def is_state_final(self, current_state):
+        return len(self._states[current_state]) == 0
+
+    def get_first_state(self):
+        try:
+            return next(iter(self._states.keys()))
+        except StopIteration:
+            raise EmptyMachine("No states defined")
+
     def execute(self, value, current_state):
         try:
             return self._states[current_state][value]
@@ -122,7 +139,11 @@ class StateMachine(metaclass=MetaMachine):
         self._transitions = (
             transitions or getattr(meta, "transitions", None) or Transitions()
         )
-        self._initial = initial or getattr(meta, "initial", None)
+        self._initial = initial
+        if self._initial is None:
+            self._initial = getattr(meta, "initial", None)
+            if self._initial is None:
+                self._initial = self._transitions.get_first_state()
         self._state = None
         self._inputhandlers = collections.defaultdict(list)
         self._eventhandler.on("input", self._inputhandler)
@@ -131,6 +152,10 @@ class StateMachine(metaclass=MetaMachine):
     @property
     def state(self):
         return self._state
+
+    @property
+    def is_final(self):
+        return self._transitions.is_state_final(self.state)
 
     def process(self, value):
         new_state = self._transitions.execute(value, self.state)
@@ -150,6 +175,9 @@ class StateMachine(metaclass=MetaMachine):
 
     def can(self, value):
         return self._transitions.can(value, self.state)
+
+    def acceptables(self):
+        return self._transitions.acceptables(self.state)
 
     def reset(self):
         if not self._transitions.has_state(self._initial):
